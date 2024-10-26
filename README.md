@@ -18,28 +18,47 @@ A simple rule engine for eligibility determination based on attributes like age,
 - **Evaluate Rule**: `POST /api/rules/evaluate_rule`
   - **Body**: `{ ast: <AST>, data: { age, department, salary, experience } }`
 
-## Setup
+## Getting Started
 
-1. **Clone and Install**  
+1. **Clone the repository**  
    ```bash
    git clone <repo-url>
-   cd <repo-folder/backend> && npm install
-   cd frontend && npm install
-2. **Configure Environment**
-   Create .env in backend:
-   ```
+   
+2. **Install dependencies**
+   ```bash
+    cd <repo-url/backend>
+    npm install
+   
+3. **Create a .env file in the project root and add your MONGO_URI and backend server Port**:
+   ```bash
      MONGODB_URI=<mongo-db-uri>
      PORT=3000
-4. **Run Application**
+   
+## Backend Setup
+   
+1. **Start the MongoDB server (if using a local instance)**.
 
-    -Backend:
+2. **Run the beckend server**: 
+   ```bash
+      node server.js
    ```
-     node server.js
+   
+## Frontend Setup
+
+1. **Navigate to the frontend directory**:
+   ```bash
+     cd frontend
    ```
-   -Frontend:
+
+2. **Install dependencies**:
+   ```bash
+      npm install
    ```
-     npm run dev`
+3. **Start the development server**:
+   ```bash
+      npm run dev
    ```
+     
 ## Usage
   -**Create Rule**: Enter rule on frontend to generate AST.
   -**Combine & Evaluate**: Combine and test eligibility with sample data
