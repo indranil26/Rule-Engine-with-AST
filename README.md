@@ -31,9 +31,14 @@ A simple rule engine for eligibility determination based on attributes like age,
      MONGODB_URI=<mongo-db-uri>
      PORT=3000
 4. **Run Application**
-     -Backend: `node server.js`
-     -Frontend:`npm run dev`
-
+   -Backend:
+   ```
+     node server.js
+   ```
+   -Frontend:
+   ```
+     npm run dev`
+   ```
 ## Usage
   -**Create Rule**: Enter rule on frontend to generate AST.
   -**Combine & Evaluate**: Combine and test eligibility with sample data
