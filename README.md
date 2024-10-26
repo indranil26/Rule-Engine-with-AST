@@ -31,7 +31,8 @@ A simple rule engine for eligibility determination based on attributes like age,
      MONGODB_URI=<mongo-db-uri>
      PORT=3000
 4. **Run Application**
-   -Backend:
+
+    -Backend:
    ```
      node server.js
    ```
