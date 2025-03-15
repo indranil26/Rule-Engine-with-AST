@@ -9,13 +9,94 @@ class Node {
 }
 
 const tokenize = (ruleString) => {
-  return ruleString.match(/[\w]+|[><=()]|and|or/gi).map(token => 
-    token.toLowerCase() === "and" ? "AND" : 
-    token.toLowerCase() === "or" ? "OR" : 
-    token
-  );
+  // Enhanced tokenizer that handles quoted strings and negative numbers properly
+  const tokens = [];
+  let i = 0;
+  
+  while (i < ruleString.length) {
+    // Skip whitespace
+    if (ruleString[i].trim() === '') {
+      i++;
+      continue;
+    }
+    
+    // Handle quoted strings as a single token
+    if (ruleString[i] === "'" || ruleString[i] === '"') {
+      const quoteChar = ruleString[i];
+      const startPos = i;
+      i++; // Move past the opening quote
+      
+      // Find the closing quote
+      while (i < ruleString.length && ruleString[i] !== quoteChar) {
+        i++;
+      }
+      
+      if (i < ruleString.length) {
+        // Include the closing quote
+        i++;
+        tokens.push(ruleString.substring(startPos, i));
+      } else {
+        // If no closing quote, treat as a syntax error
+        throw new Error('Unterminated string literal');
+      }
+    } 
+    // Handle multi-character operators: <=, >=, !=
+    else if ((ruleString[i] === '<' || ruleString[i] === '>' || ruleString[i] === '!') && 
+             i + 1 < ruleString.length && ruleString[i+1] === '=') {
+      tokens.push(ruleString.substring(i, i+2));
+      i += 2;
+    }
+    // Handle single-character operators and parentheses
+    else if (['(', ')', '>', '<', '='].includes(ruleString[i])) {
+      tokens.push(ruleString[i]);
+      i++;
+    }
+    // Handle negative numbers (when - appears after an operator or at start)
+    else if (ruleString[i] === '-' && 
+             (i === 0 || 
+              ['>', '<', '=', '!=', '<=', '>=', '(', 'AND', 'OR'].includes(tokens[tokens.length - 1])) &&
+             i + 1 < ruleString.length && 
+             /[0-9]/.test(ruleString[i+1])) {
+      
+      const startPos = i; // Include the minus sign
+      i++; // Move past the minus
+      
+      // Process the digits
+      while (i < ruleString.length && /[0-9.]/.test(ruleString[i])) {
+        i++;
+      }
+      
+      tokens.push(ruleString.substring(startPos, i));
+    }
+    // Handle numbers (integers, decimals)
+    else if (/[0-9]/.test(ruleString[i])) {
+      const startPos = i;
+      
+      // Process the digits
+      while (i < ruleString.length && /[0-9.]/.test(ruleString[i])) {
+        i++;
+      }
+      
+      tokens.push(ruleString.substring(startPos, i));
+    }
+    // Handle words (identifiers, keywords)
+    else if (/[a-zA-Z_]/.test(ruleString[i])) {
+      const startPos = i;
+      while (i < ruleString.length && /[a-zA-Z0-9_]/.test(ruleString[i])) {
+        i++;
+      }
+      const word = ruleString.substring(startPos, i);
+      tokens.push(word.toLowerCase() === "and" ? "AND" : 
+                  word.toLowerCase() === "or" ? "OR" : word);
+    }
+    // Skip other characters
+    else {
+      i++;
+    }
+  }
+  
+  return tokens;
 };
-
 
 const applyOperator = (operatorStack, operandStack) => {
   const operator = operatorStack.pop();
@@ -48,10 +129,10 @@ const parseTokens = (tokens) => {
         applyOperator(operatorStack, operandStack);
       }
       operatorStack.push(token);  // Push the current operator
-    } else if (['>', '<', '=', '!='].includes(tokens[i + 1])) {
+    } else if (i + 1 < tokens.length && ['>', '<', '=', '!=', '<=', '>='].includes(tokens[i + 1])) {
       const field = token;         // e.g., "age"
-      const operator = tokens[i + 1]; // e.g., ">"
-      const value = tokens[i + 2];    // e.g., "30"
+      const operator = tokens[i + 1]; // e.g., ">" or "<="
+      const value = tokens[i + 2];    // e.g., "30" or "'fine arts'"
 
       console.log(`Creating operand node: ${field} ${operator} ${value}`);
       operandStack.push(new Node('operand', null, null, `${field} ${operator} ${value}`));
@@ -93,26 +174,73 @@ const combine_rules = (rules) => {
   return combinedAST;
 };
 
+// Helper function to normalize number values
+const normalizeNumberValue = (value) => {
+  // Check if it's a numeric string (including those with leading zeros)
+  if (typeof value === 'string' && /^-?[0-9]+(\.[0-9]+)?$/.test(value)) {
+    // Convert to number to normalize (removes leading zeros)
+    return Number(value);
+  }
+  return value;
+};
+
 // Evaluate the combined AST against the provided data
 const evaluate_rule = (ast, data) => {
   if (ast.type === 'operand') {
-    const [field, operator, value] = ast.value.split(' ');
- 
+    const parts = ast.value.split(' ');
+    const field = parts[0];
+    const operator = parts[1];
+    // Join remaining parts to handle multi-token values
+    let value = parts.slice(2).join(' ').replace(/^['"]|['"]$/g, '');
+    
+    // Get field value, handle undefined fields gracefully
+    const fieldValue = data[field];
+    if (fieldValue === undefined) {
+      console.warn(`Field "${field}" not found in data`);
+      return false;
+    }
+    
+    // Normalize numeric values (handle leading zeros and ensure proper number comparison)
+    const normalizedFieldValue = normalizeNumberValue(fieldValue);
+    const normalizedCompareValue = normalizeNumberValue(value);
+    
+    // Convert string values to lowercase for case-insensitive comparison
+    const fieldValueForComparison = typeof normalizedFieldValue === 'string' ? 
+                                   normalizedFieldValue.toLowerCase() : normalizedFieldValue;
+    const compareValue = typeof normalizedCompareValue === 'string' ? 
+                        normalizedCompareValue.toLowerCase() : normalizedCompareValue;
+    
+    console.log(`Comparing: ${fieldValueForComparison} ${operator} ${compareValue}`);
+    
     switch (operator) {
       case '>':
-        return data[field] > Number(value);
+        // Ensure numeric comparison
+        return Number(fieldValueForComparison) > Number(compareValue);
       case '<':
-        return data[field] < Number(value);
-        case '=':
-          // Convert both sides to lowercase for case-insensitive comparison
-          const fieldValue = typeof data[field] === 'string' ? data[field].toLowerCase() : data[field];
-          const compareValue = value.replace(/'/g, '').toLowerCase();
-          return fieldValue === compareValue;
-        case '!=':
-          // Also make the inequality check case-insensitive
-          const fieldValueNE = typeof data[field] === 'string' ? data[field].toLowerCase() : data[field];
-          const compareValueNE = value.replace(/'/g, '').toLowerCase();
-          return fieldValueNE !== compareValueNE;
+        // Ensure numeric comparison
+        return Number(fieldValueForComparison) < Number(compareValue);
+      case '>=':
+        // Added support for greater than or equal
+        return Number(fieldValueForComparison) >= Number(compareValue);
+      case '<=':
+        // Added support for less than or equal
+        return Number(fieldValueForComparison) <= Number(compareValue);
+      case '=':
+        // Use loose equality for numeric values to handle string/number equivalence
+        if (typeof fieldValueForComparison === 'number' || typeof compareValue === 'number') {
+          // If either side is a number, compare numerically
+          return Number(fieldValueForComparison) === Number(compareValue);
+        }
+        // Otherwise do a string comparison
+        return fieldValueForComparison === compareValue;
+      case '!=':
+        // Use loose inequality for numeric values
+        if (typeof fieldValueForComparison === 'number' || typeof compareValue === 'number') {
+          // If either side is a number, compare numerically
+          return Number(fieldValueForComparison) !== Number(compareValue);
+        }
+        // Otherwise do a string comparison
+        return fieldValueForComparison !== compareValue;
       default:
         throw new Error(`Unsupported operator: ${operator}`);
     }
@@ -222,17 +350,3 @@ exports.modifyRule = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-
-// // Test cases
-// const rule1 = "((age > 30 AND department = 'Sales') OR (age < 25 AND department = 'Marketing')) AND (salary > 50000 OR experience > 5)";
-// const rule2 = "((age > 30 AND department = 'Marketing')) AND (salary > 20000 OR experience > 5)";
-
-// const ast1 = createRule(rule1);
-// const ast2 = createRule(rule2);
-
-// console.log("AST for Rule 1:", JSON.stringify(ast1, null, 2));
-// console.log("AST for Rule 2:", JSON.stringify(ast2, null, 2));
-
-// const combinedAst = combine_rules([rule1, rule2]);
-// const result = evaluate_rule(combinedAst, { age: 35, department: 'Marketing', salary: 10000, experience: 6 });
-// console.log("Evaluation Result:", result); // Should evaluate based on combined rules

@@ -10,6 +10,7 @@ function App() {
   const [modifiedRule, setModifiedRule] = useState('');
   const [data, setData] = useState({ age: '', department: '', salary: '', experience: '' });
   const [result, setResult] = useState(null);
+  
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
