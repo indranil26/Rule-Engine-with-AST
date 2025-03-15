@@ -9,8 +9,13 @@ class Node {
 }
 
 const tokenize = (ruleString) => {
-  return ruleString.match(/[\w]+|[><=()]|AND|OR/g);  // Tokenize the rule
+  return ruleString.match(/[\w]+|[><=()]|and|or/gi).map(token => 
+    token.toLowerCase() === "and" ? "AND" : 
+    token.toLowerCase() === "or" ? "OR" : 
+    token
+  );
 };
+
 
 const applyOperator = (operatorStack, operandStack) => {
   const operator = operatorStack.pop();
@@ -92,15 +97,22 @@ const combine_rules = (rules) => {
 const evaluate_rule = (ast, data) => {
   if (ast.type === 'operand') {
     const [field, operator, value] = ast.value.split(' ');
+ 
     switch (operator) {
       case '>':
         return data[field] > Number(value);
       case '<':
         return data[field] < Number(value);
-      case '=':
-        return data[field] === value.replace(/'/g, ''); // Remove quotes for string comparison
-      case '!=':
-        return data[field] !== value;
+        case '=':
+          // Convert both sides to lowercase for case-insensitive comparison
+          const fieldValue = typeof data[field] === 'string' ? data[field].toLowerCase() : data[field];
+          const compareValue = value.replace(/'/g, '').toLowerCase();
+          return fieldValue === compareValue;
+        case '!=':
+          // Also make the inequality check case-insensitive
+          const fieldValueNE = typeof data[field] === 'string' ? data[field].toLowerCase() : data[field];
+          const compareValueNE = value.replace(/'/g, '').toLowerCase();
+          return fieldValueNE !== compareValueNE;
       default:
         throw new Error(`Unsupported operator: ${operator}`);
     }

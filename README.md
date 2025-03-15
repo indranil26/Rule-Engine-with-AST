@@ -64,5 +64,5 @@ A simple rule engine for eligibility determination based on attributes like age,
   - **Create Rule**: Enter rule on frontend to generate AST.
   - **Combine & Evaluate**: Combine and test eligibility with sample data
 
-Feel free to replace `<repo-url>` and `<mongo-db-uri>` with the actual values! Let me know if you need any more changes.
+Feel free to replace `<repo-url>` and `<mongo-db-uri>` with the actual values!
 
