@@ -10,6 +10,7 @@ function App() {
   const [modifiedRule, setModifiedRule] = useState('');
   const [data, setData] = useState({ age: '', department: '', salary: '', experience: '' });
   const [result, setResult] = useState(null);
+  const apiUrl=import.meta.env.VITE_API_URL;
   
 
   const toggleDarkMode = () => {
@@ -23,7 +24,7 @@ function App() {
   const handleRuleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:3000/api/rules/create_rule', { rule });
+      const response = await axios.post(`${apiUrl}/api/rules/create_rule`, { rule });
       setRuleId(response.data._id);
       setResult('Rule created successfully!');
     } catch (err) {
@@ -38,7 +39,7 @@ function App() {
       return;
     }
     try {
-      await axios.put(`http://localhost:3000/api/rules/modify_rule/${ruleId}`, { rule: modifiedRule });
+      await axios.put(`${apiUrl}/api/rules/modify_rule/${ruleId}`, { rule: modifiedRule });
       setResult('Rule modified successfully!');
     } catch (err) {
       setResult('Error modifying rule.');
@@ -50,13 +51,13 @@ function App() {
     try {
       let ast;
       if (ruleId) {
-        const ruleResponse = await axios.get(`http://localhost:3000/api/rules/get_rule/${ruleId}`);
+        const ruleResponse = await axios.get(`${apiUrl}/api/rules/get_rule/${ruleId}`);
         ast = ruleResponse.data.ast;
       } else {
         setResult('No rule available for evaluation.');
         return;
       }
-      const response = await axios.post('http://localhost:3000/api/rules/evaluate_rule', { ast, data });
+      const response = await axios.post(`${apiUrl}/api/rules/evaluate_rule`, { ast, data });
       setResult(response.data.result ? 'User matches the rule' : 'User does not match the rule');
     } catch (err) {
       setResult(`Error evaluating rule: ${err.message}`);
@@ -66,7 +67,7 @@ function App() {
   const handleCombineRules = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:3000/api/rules/combine_rules', { rules });
+      const response = await axios.post(`${apiUrl}/api/rules/combine_rules`, { rules });
       if (response.data._id) {
         setCombinedRuleId(response.data._id);
         setResult('Rules combined successfully!');
@@ -83,7 +84,7 @@ function App() {
     try {
       let ast;
       if (combinedRuleId) {
-        const ruleResponse = await axios.get(`http://localhost:3000/api/rules/get_rule/${combinedRuleId}`);
+        const ruleResponse = await axios.get(`${apiUrl}/api/rules/get_rule/${combinedRuleId}`);
         if (ruleResponse.data && ruleResponse.data.ast) {
           ast = ruleResponse.data.ast;
         } else {
@@ -94,7 +95,7 @@ function App() {
         setResult('No combined rule available for evaluation.');
         return;
       }
-      const response = await axios.post('http://localhost:3000/api/rules/evaluate_rule', { ast, data });
+      const response = await axios.post(`${apiUrl}/api/rules/evaluate_rule`, { ast, data });
       setResult(response.data.result ? 'User matches the combined rule' : 'User does not match the combined rule');
     } catch (err) {
       setResult(`Error evaluating combined rule: ${err.message}`);
