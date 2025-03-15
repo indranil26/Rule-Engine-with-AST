@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 function App() {
+  const [darkMode, setDarkMode] = useState(false);
   const [rule, setRule] = useState('');
   const [rules, setRules] = useState(['']);
   const [ruleId, setRuleId] = useState(null);
@@ -9,6 +10,10 @@ function App() {
   const [modifiedRule, setModifiedRule] = useState('');
   const [data, setData] = useState({ age: '', department: '', salary: '', experience: '' });
   const [result, setResult] = useState(null);
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
 
   const addRuleField = () => {
     setRules([...rules, '']);
@@ -96,36 +101,48 @@ function App() {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      {/* Result Display */}
-      {result && (
-  <div
-    className={`text-center p-4 rounded mb-6 shadow-md ${
-      result.toLowerCase().includes('no') || result.toLowerCase().includes('error')
-        ? 'bg-red-100 border border-red-300 text-red-800'  // Red tone for errors/negative results
-        : 'bg-blue-100 border border-blue-300 text-blue-800' // Blue tone for success
-    }`}
-  >
-    <h3 className="text-xl font-bold">Result: {result}</h3>
-  </div>
-)}
-
+    <div className={`container mx-auto p-6 ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+    <div className="flex justify-end mb-4">
+      <button
+        onClick={toggleDarkMode}
+        className={`px-4 py-2 rounded font-semibold transition-all ${
+          darkMode ? 'bg-gray-100 text-black' : 'bg-gray-800 text-white'
+        }`}
+      >
+        {darkMode ? '☀ Light Mode' : '🌙 Dark Mode'}
+      </button>
+    </div>
       <h1 className="text-3xl font-bold mb-6 text-center">Rule Engine</h1>
+  
+      {/* Result Display directly under Rule Engine */}
+      {result && (
+        <div
+          className={`text-center p-4 rounded mb-6 shadow-md ${
+            result.toLowerCase().includes('no') || result.toLowerCase().includes('error')
+              ? 'bg-red-100 border border-red-300 text-red-800'
+              : 'bg-blue-100 border border-blue-300 text-blue-800'
+          }`}
+        >
+          <h3 className="text-xl font-bold">Result: {result}</h3>
+        </div>
+      )}
 
-      <form onSubmit={handleRuleSubmit} className="mb-6 p-4 bg-white rounded shadow-md">
+      <form onSubmit={handleRuleSubmit} className={`mb-6 p-4 rounded shadow-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <label className="block text-lg font-semibold mb-2">
           Rule String:
           <input
             type="text"
             value={rule}
             onChange={(e) => setRule(e.target.value)}
-            className="w-full mt-2 p-2 border rounded"
+            className={`w-full mt-2 p-2 border rounded ${
+              darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-black'
+            }`}
           />
         </label>
         <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded mt-4">Create Rule</button>
       </form>
 
-      <form onSubmit={handleRuleModification} className="mb-6 p-4 bg-white rounded shadow-md">
+      <form onSubmit={handleRuleModification} className={`mb-6 p-4 rounded shadow-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <h3 className="text-lg font-semibold mb-2">Modify Rule</h3>
         <label className="block text-lg font-semibold mb-2">
           Modified Rule String:
@@ -133,13 +150,15 @@ function App() {
             type="text"
             value={modifiedRule}
             onChange={(e) => setModifiedRule(e.target.value)}
-            className="w-full mt-2 p-2 border rounded"
+            className={`w-full mt-2 p-2 border rounded ${
+              darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-black'
+            }`}
           />
         </label>
         <button type="submit" className="w-full bg-green-500 text-white py-2 rounded mt-4">Modify Rule</button>
       </form>
 
-      <form onSubmit={handleEvaluation} className="mb-6 p-4 bg-white rounded shadow-md">
+      <form onSubmit={handleEvaluation} className={`mb-6 p-4 rounded shadow-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <h3 className="text-lg font-semibold mb-2">Evaluate Rule</h3>
         {['age', 'department', 'salary', 'experience'].map((field, index) => (
           <label key={index} className="block text-lg font-semibold mb-2">
@@ -148,7 +167,9 @@ function App() {
               type={field === 'department' ? 'text' : 'number'}
               value={data[field]}
               onChange={(e) => setData({ ...data, [field]: e.target.value })}
-              className="w-full mt-2 p-2 border rounded"
+              className={`w-full mt-2 p-2 border rounded ${
+                darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-black'
+              }`}
             />
           </label>
         ))}
@@ -162,7 +183,7 @@ function App() {
         </button>
       </form>
 
-      <form onSubmit={handleCombineRules} className="mb-6 p-4 bg-white rounded shadow-md">
+      <form onSubmit={handleCombineRules} className={`mb-6 p-4 rounded shadow-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <h3 className="text-lg font-semibold mb-2">Combine Multiple Rules</h3>
         {rules.map((rule, index) => (
           <div key={index} className="mb-2">
@@ -176,7 +197,9 @@ function App() {
                   updatedRules[index] = e.target.value;
                   setRules(updatedRules);
                 }}
-                className="w-full mt-2 p-2 border rounded"
+                className={`w-full mt-2 p-2 border rounded ${
+                  darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-black'
+                }`}
               />
             </label>
           </div>
