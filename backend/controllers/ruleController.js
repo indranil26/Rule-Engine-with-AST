@@ -184,7 +184,6 @@ const normalizeNumberValue = (value) => {
   return value;
 };
 
-// Evaluate the combined AST against the provided data
 const evaluate_rule = (ast, data) => {
   if (ast.type === 'operand') {
     const parts = ast.value.split(' ');
@@ -193,10 +192,12 @@ const evaluate_rule = (ast, data) => {
     // Join remaining parts to handle multi-token values
     let value = parts.slice(2).join(' ').replace(/^['"]|['"]$/g, '');
     
-    // Get field value, handle undefined fields gracefully
-    const fieldValue = data[field];
+    // Case-insensitive field lookup
+    const fieldKey = Object.keys(data).find(key => key.toLowerCase() === field.toLowerCase());
+    const fieldValue = fieldKey ? data[fieldKey] : undefined;
+    
     if (fieldValue === undefined) {
-      console.warn(`Field "${field}" not found in data`);
+      console.warn(`Field "${field}" not found in data. Available fields: ${Object.keys(data).join(', ')}`);
       return false;
     }
     
@@ -220,10 +221,8 @@ const evaluate_rule = (ast, data) => {
         // Ensure numeric comparison
         return Number(fieldValueForComparison) < Number(compareValue);
       case '>=':
-        // Added support for greater than or equal
         return Number(fieldValueForComparison) >= Number(compareValue);
       case '<=':
-        // Added support for less than or equal
         return Number(fieldValueForComparison) <= Number(compareValue);
       case '=':
         // Use loose equality for numeric values to handle string/number equivalence
